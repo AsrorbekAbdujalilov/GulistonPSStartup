@@ -1,0 +1,263 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        request.auth.token.email == 'nosirovkamron622@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isJuryMember() {
+      return isVerified() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users_public/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users_public/$(request.auth.uid)).data.isJury == true)
+      );
+    }
+
+    // Validation Blueprints
+    function isValidUserPublic(data) {
+      return data.keys().hasAll([
+        'uid', 'sevenDigitId', 'name', 'surname', 'grade', 'role',
+        'isJury', 'isSoftwareTutor', 'isHardwareTutor', 'teamId', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid', 'sevenDigitId', 'name', 'surname', 'grade', 'role',
+        'isJury', 'isSoftwareTutor', 'isHardwareTutor', 'teamId', 'createdAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.sevenDigitId is string && data.sevenDigitId.size() == 7 && data.sevenDigitId.matches('^[0-9]{7}$') &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+      data.surname is string && data.surname.size() >= 1 && data.surname.size() <= 80 &&
+      data.grade is string && data.grade.size() >= 1 && data.grade.size() <= 30 &&
+      data.role is string && data.role.size() <= 30 &&
+      data.role in ['participant', 'jury', 'software_tutor', 'hardware_tutor', 'admin'] &&
+      data.isJury is bool &&
+      data.isSoftwareTutor is bool &&
+      data.isHardwareTutor is bool &&
+      data.teamId is string && data.teamId.size() <= 128 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidUserPrivate(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+      data.keys().hasOnly(['uid', 'email', 'createdAt']) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidProjectSubmission(data) {
+      return data.keys().hasAll([
+        'id', 'leaderId', 'teamName', 'targetTeamSize', 'teamLogoUrl',
+        'projectName', 'projectLogoUrl', 'projectType', 'description',
+        'subjects', 'githubRepo', 'presentationUrl', 'videoUrl', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'leaderId', 'teamName', 'targetTeamSize', 'teamLogoUrl',
+        'projectName', 'projectLogoUrl', 'projectType', 'description',
+        'subjects', 'githubRepo', 'presentationUrl', 'videoUrl', 'createdAt'
+      ]) &&
+      data.id is string && data.id.size() >= 1 && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.leaderId is string && data.leaderId.size() >= 1 && data.leaderId.size() <= 128 && data.leaderId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.teamName is string && data.teamName.size() >= 1 && data.teamName.size() <= 100 &&
+      data.targetTeamSize is int && data.targetTeamSize >= 2 && data.targetTeamSize <= 4 &&
+      data.teamLogoUrl is string && data.teamLogoUrl.size() <= 150000 &&
+      data.projectName is string && data.projectName.size() >= 1 && data.projectName.size() <= 120 &&
+      data.projectLogoUrl is string && data.projectLogoUrl.size() <= 150000 &&
+      data.projectType is string && data.projectType.size() <= 40 &&
+      data.projectType in ['Robotics', 'Software', 'Hardware+Software'] &&
+      data.description is string && data.description.size() >= 1 && data.description.size() <= 250 &&
+      data.subjects is list && data.subjects.size() >= 1 && data.subjects.size() <= 10 &&
+      data.subjects[0] is string && data.subjects[0].size() >= 1 && data.subjects[0].size() <= 60 &&
+      data.githubRepo is string && data.githubRepo.size() >= 1 && data.githubRepo.size() <= 500 &&
+      data.presentationUrl is string && data.presentationUrl.size() >= 1 && data.presentationUrl.size() <= 150000 &&
+      data.videoUrl is string && data.videoUrl.size() <= 150000 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidEvaluation(data) {
+      return data.keys().hasAll([
+        'id', 'projectId', 'juryId', 'mvpScore', 'ideaScore',
+        'presentationScore', 'technicalScore', 'activenessScore',
+        'maxScore', 'normalizedScore', 'feedback', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'projectId', 'juryId', 'mvpScore', 'ideaScore',
+        'presentationScore', 'technicalScore', 'activenessScore',
+        'maxScore', 'normalizedScore', 'feedback', 'createdAt'
+      ]) &&
+      data.id is string && data.id.size() >= 1 && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128 && data.projectId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.juryId is string && data.juryId.size() >= 1 && data.juryId.size() <= 128 && data.juryId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.mvpScore is number && data.mvpScore >= 0 && data.mvpScore <= 15 &&
+      data.ideaScore is number && data.ideaScore >= 0 && data.ideaScore <= 15 &&
+      data.presentationScore is number && data.presentationScore >= 0 && data.presentationScore <= 10 &&
+      data.technicalScore is number && data.technicalScore >= 0 && data.technicalScore <= 10 &&
+      data.activenessScore is number && data.activenessScore >= 0 && data.activenessScore <= 10 &&
+      data.maxScore is number && (data.maxScore == 50 || data.maxScore == 60) &&
+      data.normalizedScore is number && data.normalizedScore >= 0 && data.normalizedScore <= 100 &&
+      data.feedback is string && data.feedback.size() <= 1000 &&
+      data.createdAt is timestamp;
+    }
+
+    // Admins lookup collection
+    match /admins/{adminId} {
+      allow get: if isVerified() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+
+    // 1. /users_public/{userId}
+    match /users_public/{userId} {
+      allow get: if isVerified() && isValidId(userId) && (request.auth.uid == userId || isAdmin() || isJuryMember());
+      allow list: if isVerified() && (resource.data.uid == request.auth.uid || isAdmin());
+
+      allow create: if isVerified() &&
+        isValidId(userId) &&
+        isValidUserPublic(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        userId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        (
+          (incoming().role == 'participant' &&
+           incoming().isJury == false &&
+           incoming().isSoftwareTutor == false &&
+           incoming().isHardwareTutor == false) ||
+          isAdmin()
+        );
+
+      allow update: if isVerified() &&
+        isValidId(userId) &&
+        isValidUserPublic(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().sevenDigitId == existing().sevenDigitId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          (request.auth.uid == userId &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'surname', 'grade', 'teamId'])) ||
+          (isAdmin() &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['role', 'isJury', 'isSoftwareTutor', 'isHardwareTutor', 'teamId', 'name', 'surname', 'grade']))
+        );
+
+      allow delete: if isVerified() && isValidId(userId) && isAdmin();
+    }
+
+    // 2. /users_private/{userId} (PII Isolated)
+    match /users_private/{userId} {
+      allow get: if isVerified() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isVerified() && resource.data.uid == request.auth.uid;
+
+      allow create: if isVerified() &&
+        isValidId(userId) &&
+        isValidUserPrivate(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        userId == request.auth.uid &&
+        incoming().createdAt == request.time;
+
+      allow update: if isVerified() &&
+        isValidId(userId) &&
+        isValidUserPrivate(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          (request.auth.uid == userId && incoming().diff(existing()).affectedKeys().hasOnly(['email'])) ||
+          isAdmin()
+        );
+
+      allow delete: if isVerified() && isValidId(userId) && isAdmin();
+    }
+
+    // 3. /projects/{projectId}
+    match /projects/{projectId} {
+      allow get: if isVerified() && isValidId(projectId) && (existing().leaderId == request.auth.uid || isJuryMember() || isAdmin());
+      allow list: if isVerified() && (resource.data.leaderId == request.auth.uid || isAdmin());
+
+      allow create: if isVerified() &&
+        isValidId(projectId) &&
+        isValidProjectSubmission(incoming()) &&
+        incoming().id == projectId &&
+        incoming().leaderId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/users_public/$(request.auth.uid));
+
+      allow update: if isVerified() &&
+        isValidId(projectId) &&
+        isValidProjectSubmission(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().leaderId == existing().leaderId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          (existing().leaderId == request.auth.uid &&
+           incoming().diff(existing()).affectedKeys().hasOnly([
+             'teamName', 'targetTeamSize', 'teamLogoUrl', 'projectName',
+             'projectLogoUrl', 'projectType', 'description', 'subjects',
+             'githubRepo', 'presentationUrl', 'videoUrl'
+           ])) ||
+          isAdmin()
+        );
+
+      allow delete: if isVerified() && isValidId(projectId) && (existing().leaderId == request.auth.uid || isAdmin());
+    }
+
+    // 4. /evaluations/{evaluationId}
+    match /evaluations/{evaluationId} {
+      allow get: if isVerified() && isValidId(evaluationId) && (existing().juryId == request.auth.uid || isJuryMember() || isAdmin());
+      allow list: if isVerified() && (resource.data.juryId == request.auth.uid || isAdmin());
+
+      allow create: if isVerified() &&
+        isValidId(evaluationId) &&
+        isValidEvaluation(incoming()) &&
+        incoming().id == evaluationId &&
+        incoming().juryId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        isJuryMember() &&
+        exists(/databases/$(database)/documents/projects/$(incoming().projectId));
+
+      allow update: if isVerified() &&
+        isValidId(evaluationId) &&
+        isValidEvaluation(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().projectId == existing().projectId &&
+        incoming().juryId == existing().juryId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          (existing().juryId == request.auth.uid &&
+           isJuryMember() &&
+           incoming().diff(existing()).affectedKeys().hasOnly([
+             'mvpScore', 'ideaScore', 'presentationScore', 'technicalScore',
+             'activenessScore', 'maxScore', 'normalizedScore', 'feedback'
+           ])) ||
+          isAdmin()
+        );
+
+      allow delete: if isVerified() && isValidId(evaluationId) && isAdmin();
+    }
+  }
+}

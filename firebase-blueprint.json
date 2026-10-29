@@ -1,0 +1,310 @@
+{
+  "entities": {
+    "UserPublic": {
+      "title": "UserPublic",
+      "description": "Public profile of a competition participant, tutor, jury, or admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sevenDigitId": {
+          "type": "string",
+          "description": "Unique 7-digit participant ID used for team invitations",
+          "minLength": 7,
+          "maxLength": 7,
+          "pattern": "^[0-9]{7}$"
+        },
+        "name": {
+          "type": "string",
+          "description": "First name of the user",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "surname": {
+          "type": "string",
+          "description": "Surname of the user",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "grade": {
+          "type": "string",
+          "description": "Student grade level or staff title",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "role": {
+          "type": "string",
+          "description": "Primary role in the competition",
+          "enum": ["participant", "jury", "software_tutor", "hardware_tutor", "admin"],
+          "maxLength": 30
+        },
+        "isJury": {
+          "type": "boolean",
+          "description": "Whether the user has jury grading privileges"
+        },
+        "isSoftwareTutor": {
+          "type": "boolean",
+          "description": "Whether the user is designated as the Software Teacher/Tutor"
+        },
+        "isHardwareTutor": {
+          "type": "boolean",
+          "description": "Whether the user is designated as the Hardware Teacher/Tutor"
+        },
+        "teamId": {
+          "type": "string",
+          "description": "ID of the team the user belongs to, or empty string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": [
+        "uid",
+        "sevenDigitId",
+        "name",
+        "surname",
+        "grade",
+        "role",
+        "isJury",
+        "isSoftwareTutor",
+        "isHardwareTutor",
+        "teamId",
+        "createdAt"
+      ]
+    },
+    "UserPrivate": {
+      "title": "UserPrivate",
+      "description": "Isolated PII profile storing user email.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "ProjectSubmission": {
+      "title": "ProjectSubmission",
+      "description": "Team and startup project registration for GulistanPS Startup Competition 26/27.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Project document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "leaderId": {
+          "type": "string",
+          "description": "UID of the team leader",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "teamName": {
+          "type": "string",
+          "description": "Name of the participating startup team",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "targetTeamSize": {
+          "type": "integer",
+          "description": "Number of team members between 2 and 4"
+        },
+        "teamLogoUrl": {
+          "type": "string",
+          "description": "Optional URL or data URI for team logo",
+          "maxLength": 150000
+        },
+        "projectName": {
+          "type": "string",
+          "description": "Title of the startup project",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "projectLogoUrl": {
+          "type": "string",
+          "description": "Optional URL or data URI for project logo",
+          "maxLength": 150000
+        },
+        "projectType": {
+          "type": "string",
+          "description": "Category of the project",
+          "enum": ["Robotics", "Software", "Hardware+Software"],
+          "maxLength": 40
+        },
+        "description": {
+          "type": "string",
+          "description": "Project summary up to 250 characters",
+          "minLength": 1,
+          "maxLength": 250
+        },
+        "subjects": {
+          "type": "array",
+          "description": "School subjects blended into the project"
+        },
+        "githubRepo": {
+          "type": "string",
+          "description": "Required GitHub repository URL",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "presentationUrl": {
+          "type": "string",
+          "description": "Required presentation URL or file reference",
+          "minLength": 1,
+          "maxLength": 150000
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "Optional additional video material URL",
+          "maxLength": 150000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "leaderId",
+        "teamName",
+        "targetTeamSize",
+        "teamLogoUrl",
+        "projectName",
+        "projectLogoUrl",
+        "projectType",
+        "description",
+        "subjects",
+        "githubRepo",
+        "presentationUrl",
+        "videoUrl",
+        "createdAt"
+      ]
+    },
+    "Evaluation": {
+      "title": "Evaluation",
+      "description": "Demo Day evaluation score submitted by a jury member or tutor.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Evaluation document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "projectId": {
+          "type": "string",
+          "description": "ID of the evaluated project",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "juryId": {
+          "type": "string",
+          "description": "UID of the grading jury member",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mvpScore": {
+          "type": "number",
+          "description": "Readiness of MVP score (0-15)"
+        },
+        "ideaScore": {
+          "type": "number",
+          "description": "Idea quality score (0-15)"
+        },
+        "presentationScore": {
+          "type": "number",
+          "description": "Presentation delivery score (0-10)"
+        },
+        "technicalScore": {
+          "type": "number",
+          "description": "Behind the scenes API, backend, and technical depth score (0-10)"
+        },
+        "activenessScore": {
+          "type": "number",
+          "description": "Tutor networking and communication score (0-10) for Software/Hardware tutors"
+        },
+        "maxScore": {
+          "type": "number",
+          "description": "50 for regular jury, 60 for tutor jury"
+        },
+        "normalizedScore": {
+          "type": "number",
+          "description": "Score converted to x/100"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Jury comments",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "juryId",
+        "mvpScore",
+        "ideaScore",
+        "presentationScore",
+        "technicalScore",
+        "activenessScore",
+        "maxScore",
+        "normalizedScore",
+        "feedback",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users_public/{userId}": {
+      "schema": { "$ref": "#/entities/UserPublic" },
+      "description": "Public competition profiles searchable by 7-digit ID."
+    },
+    "/users_private/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivate" },
+      "description": "Private PII (email) isolated to owner and admin."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/ProjectSubmission" },
+      "description": "Team and startup project registrations."
+    },
+    "/evaluations/{evaluationId}": {
+      "schema": { "$ref": "#/entities/Evaluation" },
+      "description": "Real-time Demo Day grading records by juries and tutors."
+    }
+  }
+}

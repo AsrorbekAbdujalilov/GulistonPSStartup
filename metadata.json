@@ -1,0 +1,6 @@
+{
+  "name": "GulistanPS Startup Competition 26/27",
+  "description": "Official competition portal for GulistanPS Startup Competition 26/27 featuring team registration, project submissions, tutor mentorship tracking, and real-time Demo Day jury grading.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

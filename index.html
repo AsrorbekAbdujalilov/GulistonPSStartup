@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var currentFetch = window.fetch ? window.fetch.bind(window) : undefined;
+          if (currentFetch) {
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function () {
+                return currentFetch;
+              },
+              set: function (fn) {
+                if (typeof fn === 'function') {
+                  currentFetch = fn;
+                }
+              },
+            });
+          }
+        } catch (_err) {
+          // Ignore if environment locks window.fetch as non-configurable
+        }
+
+        window.addEventListener(
+          'error',
+          function (event) {
+            var filename = (event && event.filename) || '';
+            var message = (event && event.message) || '';
+            if (
+              filename.indexOf('chrome-extension://') === 0 ||
+              message.indexOf('Cannot set property fetch of #<Window>') !== -1
+            ) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return false;
+            }
+          },
+          true
+        );
+
+        window.addEventListener(
+          'unhandledrejection',
+          function (event) {
+            var reason = event && event.reason ? String(event.reason.stack || event.reason.message || event.reason) : '';
+            if (
+              reason.indexOf('chrome-extension://') !== -1 ||
+              reason.indexOf('Cannot set property fetch of #<Window>') !== -1
+            ) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return false;
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <title>GulistanPS Startup Competition 26/27</title>
+    <meta name="description" content="Official competition portal for GulistanPS Startup Competition 26/27 featuring team registration, project submissions, tutor mentorship tracking, and real-time Demo Day jury grading." />
+    <meta property="og:title" content="GulistanPS Startup Competition 26/27" />
+    <meta property="og:description" content="Official competition portal for GulistanPS Startup Competition 26/27 featuring team registration, project submissions, tutor mentorship tracking, and real-time Demo Day jury grading." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
